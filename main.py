@@ -51,29 +51,22 @@ for x in range(len(ball_spawn)-1):
     balls.append(ball)
 
 visible_balls = []
-        
-def newball(balls, visible_balls, ball_count):
-    for x in range(ball_count):
-        random_ball = random.randint(0, len(balls)-1)
-        ball = balls[random_ball]
-    return ball
 
 ### Generate the ball list here ###
 for _ in range(len(balls)-1):
-    visible_balls.append(newball(balls, visible_balls, ball_count))
+    random_ball = random.randint(0, len(balls)-1)
+    newball = balls[random_ball]
+    visible_balls.append(newball)
+
 
 while running:
-    rect_list = []
-
     screen.fill((255, 255, 255))
     
     velocity = [0,0]
-
     if frog_rect.y > 500:
         vertical_momentum = 0
         velocity[1] = 0
         frog_rect.y = 500
-
 
      ##### Simulates Gravity #####
     if frog_rect.y < 550:
@@ -90,23 +83,23 @@ while running:
     
     screen.blit(action, (frog_rect.x, frog_rect.y))
 
+
     for index, ball in enumerate(visible_balls):
-        print(ball[0])
-        x = ball[0]
-        y = ball[1]
-        ball_rect = pygame.Rect(x, y, 20, 20)
-        if ball_rect.x > 0 and ball_rect.x < 400 and ball_rect.y > 0 and ball_rect.y < 600: 
+        if ball[0] > 0 and ball[0] < 400 and ball[1] > 0 and ball[1] < 600: 
+            ball_rect = pygame.Rect(ball[0], ball[1], 20, 20)
             screen.blit(ball_img, (ball[0], ball[1]))
             ball[0] += ball[2]
             ball[1] += ball[3]
         else:
-            visible_balls.remove(visible_balls[index])
-            new_ball = newball(balls, visible_balls, ball_count)
+            visible_balls.remove(ball)
+            print("removed: ", ball)
+            newball = balls[random.randint(0, len(balls)-1)]
+            print(ball)
             visible_balls.append(newball)
-
+            print("appended: ", newball)
 
     ##### movement function here #####
-    if moving_left == True:
+    if moving_left == True:  
         velocity[0] -= 1.5
     if moving_right == True:
         velocity[0] += 2
@@ -131,6 +124,5 @@ while running:
 
     frog_rect.x += velocity[0]
     frog_rect.y += velocity[1]            
-
     pygame.display.update()
     clock.tick(120)
