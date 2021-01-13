@@ -2,54 +2,114 @@ import pygame
 from pygame.locals import *
 import sys, os
 import time
+import random
 
 pygame.init()
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((300,600), 0, 32)
-display = pygame.Surface((200,600))
+screen = pygame.display.set_mode((400,600), 0, 32)
 
-frog_rect = pygame.Rect(100,200, 16, 16)
-
-    
-
-frog2 = pygame.image.load("animations/idle animations/frog2.gif")
+frog_rect = pygame.Rect(100,200, 32, 32)
 
 
 moving_left = False
 moving_right = False
 
+
 running = True
 falling = True
+jumping = False
+vertical_momentum = 0
+
+frog_y_check = 0
+balls = []
+y_check = frog_rect.y
+
+jumping = pygame.image.load("jumping.png")
+jumping = pygame.transform.scale(jumping, (64, 64))
+idle = pygame.image.load("idle.png")
+idle = pygame.transform.scale(idle, (64, 64))
+
+ball_img = pygame.image.load("ball.png")
+ball_img = pygame.transform.scale(ball_img, (60,60))
+ball_count = 2
+
+
+### Here is where all of the ball values are set ###aaa 
+ball_vel = random.randint(2, 3)
+ball_spawn = [[399, 599, [-1.5, -1.5], [-1.5, -0.5]],[199,1, [1, 1.5], [1.3, 2.5]], [99,1, [0.3, 2], [0.1, 1]], [1,349, [2.5, -1], [2.5, -2.3]], [1,599, [1, -2.5], [1, -3.4]]]
+random_spawn = random.randint(0, len(ball_spawn)-1)
+
+"""
+The current plan is to make a list of ball coordinates and possible velocities (which will be randomlly picked). 
+Then before the loop I will create a rect which will constantly be updated to an x and y variable gotten from the list.
+"""
+balls = []
+for x in range(len(ball_spawn)-1):
+    random_vel = random.randint(2, 3)
+    ball = [ball_spawn[x][0], ball_spawn[x][1], ball_spawn[x][random_vel][0], ball_spawn[x][random_vel][1]]
+    balls.append(ball)
+
+visible_balls = []
+        
+def newball(balls, visible_balls, ball_count):
+    for x in range(ball_count):
+        random_ball = random.randint(0, len(balls)-1)
+        ball = balls[random_ball]
+    return ball
+
+### Generate the ball list here ###
+for _ in range(len(balls)-1):
+    visible_balls.append(newball(balls, visible_balls, ball_count))
 
 while running:
+    rect_list = []
+
     screen.fill((255, 255, 255))
-
-    screen.blit(frog2, (frog_rect.x, frog_rect.y))
-
     
     velocity = [0,0]
 
-    ##### Adds inpenetratable floor #####
-    if frog_rect.y > 580:
+    if frog_rect.y > 500:
+        vertical_momentum = 0
         velocity[1] = 0
-        frog_rect.y = 580
+        frog_rect.y = 500
 
-    ##### Simulates Gravity #####
-    if falling == True:
-        if frog_rect.y < 580:
-            frog_rect.y += 2
+
+     ##### Simulates Gravity #####
+    if frog_rect.y < 550:
+        vertical_momentum += 0.1
+    velocity[1] += vertical_momentum
+
+    if y_check < frog_rect.y:
+        action = idle
+    elif y_check > frog_rect.y:
+        action = jumping
+    elif y_check == frog_rect.y:
+        action = idle
+    y_check = frog_rect.y
+    
+    screen.blit(action, (frog_rect.x, frog_rect.y))
+
+    for index, ball in enumerate(visible_balls):
+        print(ball[0])
+        x = ball[0]
+        y = ball[1]
+        ball_rect = pygame.Rect(x, y, 20, 20)
+        if ball_rect.x > 0 and ball_rect.x < 400 and ball_rect.y > 0 and ball_rect.y < 600: 
+            screen.blit(ball_img, (ball[0], ball[1]))
+            ball[0] += ball[2]
+            ball[1] += ball[3]
+        else:
+            visible_balls.remove(visible_balls[index])
+            new_ball = newball(balls, visible_balls, ball_count)
+            visible_balls.append(newball)
+
 
     ##### movement function here #####
     if moving_left == True:
         velocity[0] -= 1.5
     if moving_right == True:
         velocity[0] += 2
-
-
-    frog_rect.x += velocity[0]
-    frog_rect.y -= velocity[1]
-
     
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -61,15 +121,16 @@ while running:
             if event.key == pygame.K_d:
                 moving_right = True
             if event.key == pygame.K_SPACE:
-                falling = False
-                velocity[1] += 5
+                vertical_momentum = -5
+                
         if event.type == KEYUP:
             if event.key == pygame.K_a:
                 moving_left = False
             if event.key == pygame.K_d:
                 moving_right = False
-    print(frog_rect.y)
-            
+
+    frog_rect.x += velocity[0]
+    frog_rect.y += velocity[1]            
 
     pygame.display.update()
     clock.tick(120)
