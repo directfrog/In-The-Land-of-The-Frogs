@@ -47,16 +47,30 @@ Then before the loop I will create a rect which will constantly be updated to an
 balls = []
 for x in range(len(ball_spawn)-1):
     random_vel = random.randint(2, 3)
-    ball = [ball_spawn[x][0], ball_spawn[x][1], ball_spawn[x][random_vel][0], ball_spawn[x][random_vel][1]]
+    ball = [ball_spawn[x][0], ball_spawn[x][1], ball_spawn[x][random_vel][0], ball_spawn[x][random_vel][1], f"name=ball{x}"]
     balls.append(ball)
 
+"""
 visible_balls = []
+for x in range(0, len(balls)-1):
+    visible_balls.append(balls[x])
+"""
 
+visible_balls = []
 ### Generate the ball list here ###
 for _ in range(len(balls)-1):
     random_ball = random.randint(0, len(balls)-1)
     newball = balls[random_ball]
-    visible_balls.append(newball)
+    if newball not in visible_balls:
+        visible_balls.append(newball)
+    else:
+        screen.fill((255, 0, 0))
+
+
+top_rect = pygame.Rect(0, -25, 400, 1)
+bottom_rect = pygame.Rect(0, 625, 400, 1)
+left_rect = pygame.Rect(-20, 0, 1, 600)
+right_rect = pygame.Rect(420, 1, 1, 600)
 
 
 while running:
@@ -83,23 +97,26 @@ while running:
     
     screen.blit(action, (frog_rect.x, frog_rect.y))
 
-
-    for index, ball in enumerate(visible_balls):
-        if ball[0] > 0 and ball[0] < 400 and ball[1] > 0 and ball[1] < 600: 
-            ball_rect = pygame.Rect(ball[0], ball[1], 20, 20)
-            screen.blit(ball_img, (ball[0], ball[1]))
-            ball[0] += ball[2]
-            ball[1] += ball[3]
-        else:
+    for ball in visible_balls:
+        screen.blit(ball_img, (ball[0], ball[1]))
+        ball_rect = pygame.Rect(ball[0], ball[1], 20, 20)
+        ball[0] += ball[2]
+        ball[1] += ball[3]
+        if ball[0] > 400 or ball[0] < 0 or ball[1] > 600 or ball[1] < 0:
             visible_balls.remove(ball)
-            print("removed: ", ball)
-            newball = balls[random.randint(0, len(balls)-1)]
-            print(ball)
-            visible_balls.append(newball)
-            print("appended: ", newball)
+            print("removed: ", ball[4])
+        
+        if len(visible_balls) == 0:
 
+            ### pure randomness here
+            random_ball = random.randint(0, len(balls)-1) - random.randint(2, 4) + 1
+            newball = balls[random_ball]
+            visible_balls.append(newball)
+
+
+    print(visible_balls)
     ##### movement function here #####
-    if moving_left == True:  
+    if moving_left == True:
         velocity[0] -= 1.5
     if moving_right == True:
         velocity[0] += 2
