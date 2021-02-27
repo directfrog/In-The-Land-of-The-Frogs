@@ -1,0 +1,10 @@
+Stuff to do now
+-------------------
+
+1. Need to get jumping mechanism going
+2. Need to draw/add platforms
+
+
+For future:
+-------------
+ - Acceleration
