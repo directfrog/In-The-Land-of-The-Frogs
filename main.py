@@ -7,14 +7,14 @@ import random
 pygame.init()
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((400,600), 0, 32)
+screen_width = 400
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height), 0, 32)
 
 frog_rect = pygame.Rect(100,200, 32, 32)
 
-
 moving_left = False
 moving_right = False
-
 
 running = True
 falling = True
@@ -22,60 +22,69 @@ jumping = False
 vertical_momentum = 0
 
 frog_y_check = 0
-balls = []
+rocks = []
 y_check = frog_rect.y
 
-jumping = pygame.image.load("jumping.png")
+########### LOADING IMAGES ###########
+jumping_img_load  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "jumping.png")
+jumping = pygame.image.load(jumping_img_load).convert()
+jumping.set_colorkey((255, 255, 255))
 jumping = pygame.transform.scale(jumping, (64, 64))
-idle = pygame.image.load("idle.png")
+
+
+idle_image_load  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "idle.png")
+idle = pygame.image.load(idle_image_load).convert()
+idle.set_colorkey((255, 255, 255))
 idle = pygame.transform.scale(idle, (64, 64))
 
-ball_img = pygame.image.load("ball.png")
-ball_img = pygame.transform.scale(ball_img, (60,60))
-ball_count = 2
 
+rock_img_load = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ball.png")
+rock_img = pygame.image.load(rock_img_load)
+rock_img = pygame.transform.scale(rock_img, (60,60))
+rock_count = 2
 
-### Here is where all of the ball values are set ###aaa 
-ball_vel = random.randint(2, 3)
-ball_spawn = [[399, 599, [-1.5, -1.5], [-1.5, -0.5]],[199,1, [1, 1.5], [1.3, 2.5]], [99,1, [0.3, 2], [0.1, 1]], [1,349, [2.5, -1], [2.5, -2.3]], [1,599, [1, -2.5], [1, -3.4]]]
-random_spawn = random.randint(0, len(ball_spawn)-1)
+### Here i need to add the system where the rocks are randomly generated and made into an actual pieve of data ###
+def ran(x, y):
+    rand = random.randint(x, y)
+    return ran(x, y) if rand == 0 else rand
 
-"""
-The current plan is to make a list of ball coordinates and possible velocities (which will be randomlly picked). 
-Then before the loop I will create a rect which will constantly be updated to an x and y variable gotten from the list.
-"""
-balls = []
-for x in range(len(ball_spawn)-1):
-    random_vel = random.randint(2, 3)
-    ball = [ball_spawn[x][0], ball_spawn[x][1], ball_spawn[x][random_vel][0], ball_spawn[x][random_vel][1], f"name=ball{x}"]
-    balls.append(ball)
+rock_index = 0
 
-"""
-visible_balls = []
-for x in range(0, len(balls)-1):
-    visible_balls.append(balls[x])
-"""
-
-visible_balls = []
-### Generate the ball list here ###
-for _ in range(len(balls)-1):
-    random_ball = random.randint(0, len(balls)-1)
-    newball = balls[random_ball]
-    if newball not in visible_balls:
-        visible_balls.append(newball)
-    else:
-        screen.fill((255, 0, 0))
-
+def append_rocks():
+    global rock_index
+    random_choice = random.randint(1, 2)
+    if random_choice == 1:
+        x = random.randint(0, screen_width)
+        y = 0
+        if x > screen_width/2:
+            vel = [ran(-1, 3), ran(1, 3)]
+        elif x < screen_width/2:
+            vel = [ran(-1, 3), ran(1, 3)]
+    if random_choice == 2:
+        x = 0
+        y = ran(0, screen_height)
+        if y > screen_height/2:
+            vel = [ran(1, 3), ran(1, 3)]
+        elif y < screen_height/2:
+            vel = [ran(1, 3), ran(-3, -1)]
+    rock = [x, y, vel, rock_index]
+    rock_index += 1
+    return rock
 
 top_rect = pygame.Rect(0, -25, 400, 1)
 bottom_rect = pygame.Rect(0, 625, 400, 1)
 left_rect = pygame.Rect(-20, 0, 1, 600)
 right_rect = pygame.Rect(420, 1, 1, 600)
 
+data = []
+
+for x in range(3):
+    new_rock = data.append(append_rocks())
+
 
 while running:
-    screen.fill((255, 255, 255))
-    
+    screen.fill((0, 235, 155))
+
     velocity = [0,0]
     if frog_rect.y > 500:
         vertical_momentum = 0
@@ -94,45 +103,48 @@ while running:
     elif y_check == frog_rect.y:
         action = idle
     y_check = frog_rect.y
-    
+
     screen.blit(action, (frog_rect.x, frog_rect.y))
 
-    for ball in visible_balls:
-        screen.blit(ball_img, (ball[0], ball[1]))
-        ball_rect = pygame.Rect(ball[0], ball[1], 20, 20)
-        ball[0] += ball[2]
-        ball[1] += ball[3]
-        if ball[0] > 400 or ball[0] < 0 or ball[1] > 600 or ball[1] < 0:
-            visible_balls.remove(ball)
-            print("removed: ", ball[4])
-        
-        if len(visible_balls) == 0:
-
-            ### pure randomness here
-            random_ball = random.randint(0, len(balls)-1) - random.randint(2, 4) + 1
-            newball = balls[random_ball]
-            visible_balls.append(newball)
-
-
-    print(visible_balls)
     ##### movement function here #####
     if moving_left == True:
         velocity[0] -= 1.5
     if moving_right == True:
         velocity[0] += 2
-    
+
+    for x in data:
+        rect = pygame.Rect(x[0], x[1], rock_img.get_width(), rock_img.get_height())
+        screen.blit(rock_img, (rect.x, rect.y))
+        x[0] += x[2][0]
+        x[1] += x[2][1]
+
+        if rect.colliderect(top_rect) or rect.colliderect(bottom_rect) or rect.colliderect(left_rect) or rect.colliderect(right_rect):
+            '''
+            try:
+                data.remove(data[x[3]])
+            except:
+                print(data)
+                print(x)
+            '''
+            print(rock_index)
+            new_rock = append_rocks()
+            data.append(new_rock)
+
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
+            if event.key == K_ESCAPE:
+                pygame.quit()
+                sys.exit()
             if event.key == pygame.K_a:
                 moving_left = True
             if event.key == pygame.K_d:
                 moving_right = True
             if event.key == pygame.K_SPACE:
                 vertical_momentum = -5
-                
+
         if event.type == KEYUP:
             if event.key == pygame.K_a:
                 moving_left = False
@@ -140,6 +152,6 @@ while running:
                 moving_right = False
 
     frog_rect.x += velocity[0]
-    frog_rect.y += velocity[1]            
+    frog_rect.y += velocity[1]
     pygame.display.update()
     clock.tick(120)
